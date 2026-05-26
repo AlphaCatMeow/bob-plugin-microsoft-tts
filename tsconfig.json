@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "module": "CommonJS",
+    "rootDir": "src",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": false,
+    "skipLibCheck": true,
+    "declaration": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+}

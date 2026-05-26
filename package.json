@@ -1,0 +1,32 @@
+{
+  "name": "bob-plugin-microsoft-tts",
+  "version": "1.0.0",
+  "description": "Bob plugin: Microsoft Azure / Edge TTS via multiple providers",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist release",
+    "build": "pnpm run clean && pnpm run changelog && node scripts/build.js",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
+    "adm-zip": "^0.5.17",
+    "conventional-changelog": "^7.2.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
