@@ -17,8 +17,6 @@
  *   2. GITHUB_REF_NAME 环境变量（CI tag 触发，如 v1.0.0）
  *   3. git describe --tags --abbrev=0（当前分支最新 tag）
  *   4. package.json 的 version（兜底）
- *
- * appcast.json 的 desc 字段：从 CHANGELOG.md 提取当前版本的所有变更项，以换行分隔格式化输出，
  */
 
 import {execSync} from 'node:child_process';
@@ -179,7 +177,6 @@ function computeSha256() {
 /**
  * 更新根目录 appcast.json
  * Bob 通过读取此文件判断插件是否有新版本。
- * desc 字段从 CHANGELOG.md 提取当前版本的变更项，以换行分隔格式化。
  * 同一版本号已存在时会被替换（支持重新构建）。
  */
 function updateAppcast() {
@@ -254,23 +251,6 @@ function extractChangelogSection(file, heading) {
         throw new Error(`CHANGELOG.md does not contain release notes for ${heading}`);
     }
     return text;
-}
-
-/**
- * 从 CHANGELOG 片段中提取描述（用于 appcast.json 的 desc 字段）
- * 保留所有 bullet item，以换行符分隔，每条以 "- " 开头。
- * Bob 在检测到更新时会直接展示 desc 文本，换行分隔比拼接长串更易读。
- */
-function buildDesc(section) {
-    const items = section
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => /^[-*]\s+/.test(line))
-        .map((line) => line.replace(/^[-*]\s+/, '').replace(/\.$/, '。'));
-    if (items.length === 0) {
-        throw new Error('Release notes must include at least one bullet item');
-    }
-    return items.map((item) => `- ${item}`).join('\n');
 }
 
 function escapeRegExp(value) {
