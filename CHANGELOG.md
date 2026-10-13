@@ -1,4 +1,11 @@
 
+## v1.1.0 (2026-10-13)
+
+### Fixes
+
+- 更新 Edge TTS 合成端点
+- 修复 Edge TTS 合成报 403 的问题：微软自 2026 年 10 月起下线旧合成端点，合成 WebSocket 迁移至 `api.msedgeservices.com/tts/cognitiveservices/websocket/v1`（Token 改以 `Ocp-Apim-Subscription-Key` 参数传递，签名与请求头不变，音频输出不变）。
+
 ## v1.0.0 (2026-05-26)
 
 ### Features

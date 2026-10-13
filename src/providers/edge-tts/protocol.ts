@@ -4,8 +4,9 @@
  *   包括连接 URL 构建、请求头生成、消息格式封装和 Sec-MS-GEC 安全签名机制。
  *
  * 协议概述：
- * - WebSocket 端点：`wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1`
- * - 认证方式：URL 查询参数中携带 `TrustedClientToken` 和 `Sec-MS-GEC` 签名
+ * - WebSocket 端点：`wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1`
+ * - 认证方式：URL 查询参数中携带 `Ocp-Apim-Subscription-Key`（旧称 `TrustedClientToken`）
+ *   和 `Sec-MS-GEC` 签名
  * - 消息格式：基于文本的自定义协议，以 `\r\n` 分隔的键值对头部 + 正文
  * - 消息类型：`speech.config`（语音配置）和 `ssml`（合成请求）
  *
@@ -15,6 +16,13 @@
  * 3. 向下取整到 300 秒（5 分钟）的整数倍；
  * 4. 乘以 10^7 转换为 Windows Ticks（100 纳秒单位）；
  * 5. 拼接 `TrustedClientToken` 后进行 SHA-256 哈希，得到签名值。
+ *
+ * 端点变更历史：
+ * - 2026-10 起，微软旧端点 `speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1`
+ *   对合成 WebSocket 统一返回 403（多国自 10 月初、美国自 10-12 起），Edge 浏览器实际已改用
+ *   `api.msedgeservices.com/tts/cognitiveservices/websocket/v1`。新端点兼容旧 Token（以
+ *   `Ocp-Apim-Subscription-Key` 查询参数传递）、旧 `Sec-MS-GEC` 签名与请求头，音频输出不变
+ *   （MP3 / 24kHz / mono）。参见 rany2/edge-tts#490 与 PR #491。
  */
 
 import { sha256Hex } from '../../util/crypto';
@@ -25,6 +33,8 @@ import { USER_AGENT } from '../../config';
  * Edge 大声朗读服务的受信客户端 Token
  * @description 从 Edge 浏览器中提取的固定 Token，用于 Sec-MS-GEC 签名计算。
  *   该 Token 是 Edge 浏览器与 Bing 语音服务通信时的身份标识。
+ *   在 `api.msedgeservices.com` 新端点上，它以 `Ocp-Apim-Subscription-Key`
+ *   查询参数的形式传递（旧端点上参数名为 `TrustedClientToken`）。
  */
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 
@@ -74,7 +84,7 @@ export function createConnectionId(): string {
 /**
  * 构建 Edge 大声朗读 WebSocket 连接 URL
  * @description 拼接包含认证参数的完整 WebSocket URL。URL 查询参数包括：
- *   - `TrustedClientToken`：受信客户端 Token；
+ *   - `Ocp-Apim-Subscription-Key`：受信客户端 Token（新端点参数名）；
  *   - `Sec-MS-GEC`：基于当前时间戳计算的安全签名；
  *   - `Sec-MS-GEC-Version`：签名版本号；
  *   - `ConnectionId`：连接唯一标识符。
@@ -84,8 +94,8 @@ export function createConnectionId(): string {
  */
 export function buildWebSocketUrl(connectionId: string): string {
     const timestamp = Math.floor(Date.now() / 1000);
-    return 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1'
-        + '?TrustedClientToken=' + TRUSTED_CLIENT_TOKEN
+    return 'wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1'
+        + '?Ocp-Apim-Subscription-Key=' + TRUSTED_CLIENT_TOKEN
         + '&Sec-MS-GEC=' + getSecMsGec(timestamp)
         + '&Sec-MS-GEC-Version=' + SEC_MS_GEC_VERSION
         + '&ConnectionId=' + connectionId;
